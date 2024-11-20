@@ -32,6 +32,27 @@ function helpPanel(){
   echo -e "\t${purpleColour}h)${endColour} ${grayColour} Mostar el panel de ayuda${endColour}"
 }
 
+#Función para mostrar los recursos del sistema
+function showStats(){
+  cpu_user=$(top -bn 1 | grep "%Cpu" | awk '{print $2}') #Obtenemos el porcentaje de CPU utilizado por el usuario
+  cpu_sys=$(top -bn 1 | grep "%Cpu" | awk '{print $4}') #Obtenemos el porcentaje de CPU utilizado por el sistema
+  cpu_total=$(echo "$cpu_user + $cpu_sys" | bc) #Sumamos los porcentajes anteriores para obtener el total
+
+  total_memory=$(top -bn 1 | grep "Mem :" | awk '{print $4}') #Obtenemos la memoria total del sistema
+  used_memory=$(top -bn 1 | grep "Mem :" | awk '{print $8}') #Obtenemos la memoria utilizada
+  buffer_memory=$(top -bn 1 | grep "Mem :" | awk '{print $10}') #Obtenemos la memoria del buffer
+  total_used_memory=$(echo "$used_memory + $buffer_memory" | bc) #Calculamos la cantidad de memoria total utilizada 
+
+  percentage_memory=$(echo "$total_used_memory*100/$total_memory" | bc) #Calculamos el porcentaje de memoria total utilizada
+
+  total_jobs=$(top -bn 1 | awk 'NR == 2' | awk '{print $2}') #Obtenemos la cantidad de procesos del sistema
+  
+  #Imprimimos los resultados
+  echo -e "\n${yellowColour}[+]${endColour}${grayColour} Recursos del sistema:${endColour}"
+  echo -e "\n${greenColour}CPU:${endColour} ${purpleColour}$cpu_total%${endColour} ${blueColour}|${endColour} ${greenColour}RAM:${endColour} ${purpleColour}$percentage_memory%${endColour} ${blueColour}|${endColour} ${greenColour}Procesos:${endColour} ${purpleColour}$total_jobs${endColour}"
+
+}
+
 while getopts "sphf:k:" arg; do
   case $arg in
     s) let option_parameter+=1;; #Mostrar los recursos del sistema utilizándose 
@@ -43,7 +64,7 @@ while getopts "sphf:k:" arg; do
 done
 
 if [ "$option_parameter" -eq 1 ];then
-  echo "Opción s"
+  showStats
 elif [ "$option_parameter" -eq 2 ];then
   echo "Opción p"
 elif [ "$option_parameter" -eq 3 ];then
