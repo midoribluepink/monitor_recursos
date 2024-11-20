@@ -22,6 +22,16 @@ trap ctrl_c INT
 #Creación del menú de opciones del comando
 declare -i option_parameter=0 #Parámetro que tomará un valor según la opción que se indique desde la terminal
 
+#Función para el panel de ayuda
+function helpPanel(){
+  echo -e "\n${grayColour}Uso: ${endColour}"
+  echo -e "\t${purpleColour}s)${endColour} ${grayColour} Mostrar los recursos del sistema${endColour}"
+  echo -e "\t${purpleColour}p)${endColour} ${grayColour} Mostrar los procesos del sistema${endColour}"
+  echo -e "\t${purpleColour}f)${endColour} ${grayColour} Buscar un proceso específico${endColour}"
+  echo -e "\t${purpleColour}k)${endColour} ${grayColour} Matar un proceso (Insertar PID)${endColour}"
+  echo -e "\t${purpleColour}h)${endColour} ${grayColour} Mostar el panel de ayuda${endColour}"
+}
+
 while getopts "sphf:k:" arg; do
   case $arg in
     s) let option_parameter+=1;; #Mostrar los recursos del sistema utilizándose 
@@ -41,5 +51,5 @@ elif [ "$option_parameter" -eq 3 ];then
 elif [ "$option_parameter" -eq 4 ];then
   echo "Opción k"
 else
-  echo "Opción h"
+  helpPanel
 fi
