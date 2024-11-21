@@ -53,6 +53,25 @@ function showStats(){
 
 }
 
+#Función para mostrar los procesos
+function showJobs(){
+  # Imprimir en pantalla los recursos que vamos a listar
+  echo -e "\n${yellowColour}[+]${endColour}${grayColour} Procesos no pertenecientes a ${redColour}root${endColour} ${grayColour}además de aquellos con consumo de${endColour} ${purpleColour}CPU${endColour} ${grayColour}y${endColour} ${purpleColour}RAM${endColour} ${grayColour}mayores al ${endColour}${greenColour}1%${endColour}${endColour}\n"
+  echo -e "${yellowColour}PID${endColour}\t\t${greenColour}CPU Usage(%)${endColour}\t${purpleColour}RAM Usage(%)${endColour}\t${redColour}Process name${endColour}"
+  top -bn 1 | tail -n +8 | while IFS= read -r linea; do #Leemos línea por línea del comando top
+  cpu_usage=$(echo $linea | awk '{print $9}') #Uso de CPU de cada proceso
+  ram_usage=$(echo $linea | awk '{print $10}') #Uso de RAM de cada proceso
+  pid_number=$(echo $linea | awk '{print $1}') #PID de cada proceso
+  process_name=$(echo $linea | awk 'NF{print $NF}') #Nombre de cada proceso
+  process_user=$(echo $linea | awk '{print $2}') #Nombre del usuario del proceso
+  #Condicional que solo se ejecuta cuando el uso de cpu o de ram del proceso por el que se itera es mayor al 1% y para procesos que no son del root
+  if [ "$(echo "$cpu_usage > 1" | bc)" -eq 1 ] || [ "$(echo "$ram_usage > 1" | bc)" -eq 1 ] || [ ! "$process_user" == "root" ]; then
+    #Imprimimos los recursos utilizados
+    echo -e "${yellowColour}$pid_number${endColour}\t\t${greenColour}$cpu_usage${endColour}\t\t${purpleColour}$ram_usage${endColour}\t\t${redColour}$process_name${endColour}"
+  fi
+done
+}
+
 while getopts "sphf:k:" arg; do
   case $arg in
     s) let option_parameter+=1;; #Mostrar los recursos del sistema utilizándose 
@@ -66,7 +85,7 @@ done
 if [ "$option_parameter" -eq 1 ];then
   showStats
 elif [ "$option_parameter" -eq 2 ];then
-  echo "Opción p"
+  showJobs
 elif [ "$option_parameter" -eq 3 ];then
   echo "Opción f"
 elif [ "$option_parameter" -eq 4 ];then
