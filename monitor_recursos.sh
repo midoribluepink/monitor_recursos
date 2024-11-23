@@ -56,20 +56,45 @@ function showStats(){
 #Función para mostrar los procesos
 function showJobs(){
   # Imprimir en pantalla los recursos que vamos a listar
-  echo -e "\n${yellowColour}[+]${endColour}${grayColour} Procesos no pertenecientes a ${redColour}root${endColour} ${grayColour}además de aquellos con consumo de${endColour} ${purpleColour}CPU${endColour} ${grayColour}y${endColour} ${purpleColour}RAM${endColour} ${grayColour}mayores al ${endColour}${greenColour}1%${endColour}${endColour}\n"
-  echo -e "${yellowColour}PID${endColour}\t\t${greenColour}CPU Usage(%)${endColour}\t${purpleColour}RAM Usage(%)${endColour}\t${redColour}Process name${endColour}"
+  echo -e "\n${yellowColour}[+]${endColour}${grayColour} Procesos con consumo de${endColour} ${purpleColour}CPU${endColour} ${grayColour}y${endColour} ${purpleColour}RAM${endColour} ${grayColour}mayores al ${endColour}${greenColour}1%${endColour}${endColour}\n"
+  echo -e "${yellowColour}PID${endColour}\t\t${greenColour}CPU Usage(%)${endColour}\t${purpleColour}RAM Usage(%)${endColour}\t${redColour}Process Name${endColour}"
   top -bn 1 | tail -n +8 | while IFS= read -r linea; do #Leemos línea por línea del comando top
   cpu_usage=$(echo $linea | awk '{print $9}') #Uso de CPU de cada proceso
   ram_usage=$(echo $linea | awk '{print $10}') #Uso de RAM de cada proceso
   pid_number=$(echo $linea | awk '{print $1}') #PID de cada proceso
   process_name=$(echo $linea | awk 'NF{print $NF}') #Nombre de cada proceso
-  process_user=$(echo $linea | awk '{print $2}') #Nombre del usuario del proceso
-  #Condicional que solo se ejecuta cuando el uso de cpu o de ram del proceso por el que se itera es mayor al 1% y para procesos que no son del root
-  if [ "$(echo "$cpu_usage > 1" | bc)" -eq 1 ] || [ "$(echo "$ram_usage > 1" | bc)" -eq 1 ] || [ ! "$process_user" == "root" ]; then
+  #Condicional que solo se ejecuta cuando el uso de cpu o de ram del proceso por el que se itera es mayor al 1%
+  if [ "$(echo "$cpu_usage > 1" | bc)" -eq 1 ] || [ "$(echo "$ram_usage > 1" | bc)" -eq 1 ]; then 
     #Imprimimos los recursos utilizados
     echo -e "${yellowColour}$pid_number${endColour}\t\t${greenColour}$cpu_usage${endColour}\t\t${purpleColour}$ram_usage${endColour}\t\t${redColour}$process_name${endColour}"
   fi
 done
+}
+
+function searchJobs(){
+  #Función para buscar procesos
+  process_name="$1"
+  
+  #Comprobamos si el proceso existe en ejecución
+  process_checker=$(top -bn 1 | tail -n +8 | grep -i "$process_name")
+  if [ "$process_checker" ]; then
+    echo -e "\n${yellowColour}[+]${endColour} ${grayColour}Se ha encontrado el siguiente proceso:${endColour}"
+    echo -e "${yellowColour}PID${endColour}\t\t${greenColour}CPU Usage(%)${endColour}\t${purpleColour}RAM Usage(%)${endColour}\t${redColour}Process Name${endColour}\t${blueColour}User${endColour}"
+
+    #Si el proceso existe, se itera entre los posibles procesos con el mismo nombre
+    top -bn 1 | tail -n +8 | grep -i "$process_name" | while IFS= read -r linea; do 
+    cpu_usage=$(echo $linea | grep -i "$process_name" | awk '{print $9}') #Uso de CPU de cada proceso
+    ram_usage=$(echo $linea | grep -i "$process_name" | awk '{print $10}') #Uso de RAM de cada proceso
+    pid_number=$(echo $linea | grep -i "$process_name" | awk '{print $1}') #PID de cada proceso
+    job_name=$(echo $linea | grep -i "$process_name" | awk 'NF{print $NF}' | sed 's/\+//') #PID de cada proceso
+    process_user=$(echo $linea | grep -i "$process_name" | awk '{print $2}') #Nombre del usuario del proceso
+    
+    echo -e "${yellowColour}$pid_number${endColour}\t\t${greenColour}$cpu_usage${endColour}\t\t${purpleColour}$ram_usage${endColour}\t\t${redColour}$job_name${endColour}\t\t${blueColour}$process_user${endColour}"
+    done
+  else
+    echo -e "\n${redColour}[!] El proceso no existe${endColour}"
+  fi
+
 }
 
 while getopts "sphf:k:" arg; do
@@ -87,7 +112,7 @@ if [ "$option_parameter" -eq 1 ];then
 elif [ "$option_parameter" -eq 2 ];then
   showJobs
 elif [ "$option_parameter" -eq 3 ];then
-  echo "Opción f"
+  searchJobs $process_name
 elif [ "$option_parameter" -eq 4 ];then
   echo "Opción k"
 else
