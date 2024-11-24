@@ -28,7 +28,7 @@ function helpPanel(){
   echo -e "\t${purpleColour}s)${endColour} ${grayColour} Mostrar los recursos del sistema${endColour}"
   echo -e "\t${purpleColour}p)${endColour} ${grayColour} Mostrar los procesos del sistema${endColour}"
   echo -e "\t${purpleColour}f)${endColour} ${grayColour} Buscar un proceso específico${endColour}"
-  echo -e "\t${purpleColour}k)${endColour} ${grayColour} Matar un proceso (Insertar PID)${endColour}"
+  echo -e "\t${purpleColour}k)${endColour} ${grayColour} Matar un proceso (Insertar PID). Agregar la opción ${endColour}${purpleColour} -a${endColour} ${grayColour} para hacerlo de forma forzada${endColour}"
   echo -e "\t${purpleColour}h)${endColour} ${grayColour} Mostar el panel de ayuda${endColour}"
 }
 
@@ -97,12 +97,32 @@ function searchJobs(){
 
 }
 
-while getopts "sphf:k:" arg; do
+#Función para matar procesos activos
+function killJob(){
+  process_id="$1" #PID del proceso
+  process_id_checker=$(top -bn 1 | grep "$process_id") #Comprobamos si el proceso existe
+  if [ "$process_id_checker" ]; then #Si existe procedemos
+    if [ "$option_parameter" -eq 4 ]; then
+      kill "$process_id" #Matamos el proceso de forma regular
+      echo -e "\n${yellowColour}[+]${endColour} ${grayColour}Se ha matado el proceso con ${blueColour}PID: $process_id${endColour}"
+    elif [ "$option_parameter" -eq 9 ];then
+      kill -9 "$process_id" #Si se ha colocado la opción -a el proceso se matará de forma forzada
+      echo -e "\n${yellowColour}[+]${endColour} ${grayColour}Se ha matado el proceso con ${blueColour}PID: $process_id${endColour}${grayColour} de manera${endColour} ${redColour}forzada${endColour}"
+    fi
+  else #Si el proceso no existe se regresa un mensaje de aviso
+    echo -e "\n${redColour}[!] El proceso no existe${endColour}"
+  fi
+
+}
+
+# Función para detectar las opciones que el usuario inserte
+while getopts "sphaf:k:" arg; do
   case $arg in
     s) let option_parameter+=1;; #Mostrar los recursos del sistema utilizándose 
     p) let option_parameter+=2;; #Mostrar los procesos del sistema
     f) process_name="$OPTARG"; let option_parameter+=3;; #Buscar un proceso
     k) process_id="$OPTARG"; let option_parameter+=4;; #Matar un proceso
+    a) let option_parameter+=5;;
     h) ;; #Panel de ayuda
   esac
 done
@@ -113,8 +133,8 @@ elif [ "$option_parameter" -eq 2 ];then
   showJobs
 elif [ "$option_parameter" -eq 3 ];then
   searchJobs $process_name
-elif [ "$option_parameter" -eq 4 ];then
-  echo "Opción k"
+elif [ "$option_parameter" -eq 4 ] || [ "$option_parameter" -eq 9 ];then
+  killJob "$process_id"
 else
   helpPanel
 fi
