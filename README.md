@@ -1,6 +1,6 @@
 # Monitor de recursos
 
-# ✅ Opciones
+## ✅ Opciones
 - s) Mostrar los recursos del sistema
 
   Esta opción mostrará el uso de CPU, RAM y los procesos totale del sistema.
